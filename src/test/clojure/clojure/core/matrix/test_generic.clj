@@ -121,12 +121,18 @@
                 (is (cm/equals (cm/negate a) (negate real a)))))
 
 
-(defspec test-gen-vector-operations 100
+(defspec test-gen-vector-unary-operations 100
   (prop/for-all [a (gen-array :implementations [:ndarray :persistent-vector]
                               :max-dim 1 :min-dim 1)]
                 (is (cm/equals (cm/length a) (length real a)))
                 (is (cm/equals (cm/length-squared a) (length-squared
                                                       real a)))))
+
+(defspec test-gen-vector-operations 100
+  (prop/for-all [[a b] (gen-conforming-arrays 2 :implementations
+                                              [:ndarray :persistent-vector]
+                                              :max-dim 1 :min-dim 1)]
+                (is (cm/equals (cm/distance a b) (distance real a b)))))
 
 (defspec test-gen-mmul 20
   (prop/for-all [[a b] (gen/such-that
@@ -135,3 +141,8 @@
                         (gen/tuple (gen-matrix :implementations [:ndarray :persistent-vector]) (gen-matrix :implementations [:ndarray :persistent-vector])))]
                 (is (cm/equals (cm/mmul a b) (mmul real a b)))))
 
+(defspec test-gen-array-int 100
+  (prop/for-all [[a b] (gen/tuple
+                        (gen-array :implementations
+                                   [:ndarray :persistent-vector]) gen/int)]
+                (is (cm/equals (cm/scale a b) (scale real a b)))))
