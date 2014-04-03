@@ -36,7 +36,7 @@
     (is (equals [[6 7] [8 9]] (emap + [[1 2] [3 4]] 5)))
     (is (equals [[6 7] [8 9]] (emap + 5 [[1 2] [3 4]])))))
 
-(deftest test-assign 
+(deftest test-assign
   (is (= [[1 2] [1 2]] (assign [[1 2] [3 4]] [1 2])))
   (is (error? (assign [1 2] [[1 2] [3 4]]))))
 
@@ -73,7 +73,7 @@
   (is (equals [2 4 6] (dot 2 [1 2 3])))
   (is (equals [2 4 6] (dot [1 2 3] 2)))
   (is (equals 20 (dot [1 2 3] [2 3 4])))
-  (is (equals [[1 2] [6 8]] (dot [[1 0] [0 2]] [[1 2] [3 4]])))) 
+  (is (equals [[1 2] [6 8]] (dot [[1 0] [0 2]] [[1 2] [3 4]]))))
 
 (deftest test-incompatible
   (is (error? (add [1 2] [3 4 5])))
@@ -90,13 +90,13 @@
 
 (deftest test-matrix-multiply
   (testing "matrix multiplication"
-    (is (= [[5 10] [15 20]] (mmul [[1 2] [3 4]] 5)))
-    (is (= [[1 0] [2 2] [5 0]] (mmul [[1 0] [0 2] [5 0]] [[1 0] [1 1]])))
-    (is (= [[1 2] [3 4]] (mmul [[1 2] [3 4]] [[1 0] [0 1]])))
-    (is (= [[5]] (mmul [[1 2]] [[1] [2]])))
-    (is (= [7 10] (mmul [1 2] [[1 2] [3 4]]))))
+    (is (= [[5.0 10.0] [15.0 20.0]] (mmul [[1.0 2.0] [3.0 4.0]] 5.0)))
+    (is (= [[1.0 0.0] [2.0 2.0] [5.0 0.0]] (mmul [[1.0 0.0] [0.0 2.0] [5.0 0.0]] [[1.0 0.0] [1.0 1.0]])))
+    (is (= [[1.0 2.0] [3.0 4.0]] (mmul [[1.0 2.0] [3.0 4.0]] [[1.0 0.0] [0.0 1.0]])))
+    (is (= [[5.0]] (mmul [[1.0 2.0]] [[1.0] [2.0]])))
+    (is (= [7.0 10.0] (mmul [1.0 2.0] [[1.0 2.0] [3.0 4.0]]))))
   (testing "elementwise multiplication"
-    (is (= [2 4] (mul [1 2] 2)))))
+    (is (= [2.0 4.0] (mul [1.0 2.0] 2.0)))))
 
 (deftest test-division
   (testing "unary division"
@@ -106,7 +106,7 @@
 
 (deftest test-transform
   (testing "matrix transform"
-    (is (= [5 10] (transform [[1 0] [0 2]] [5 5]))))
+    (is (= [5.0 10.0] (transform [[1 0] [0 2]] [5 5]))))
   (testing "function transform"
     (is (= [1 2] (transform (fn [_] [1 2]) [5 5])))))
 
