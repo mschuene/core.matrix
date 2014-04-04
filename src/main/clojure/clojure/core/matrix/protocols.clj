@@ -211,7 +211,6 @@
   "Protocol to coerce a parameter to a format used by a specific implementation. It is
    up to the implementation to determine what parameter types they support.
    If the implementation is unable to perform coercion, it must return nil.
-
    Implementations are encouraged to avoid taking a full copy of the data, for performance reasons.
    It is preferable to use structural sharing with the original data if possible.
 

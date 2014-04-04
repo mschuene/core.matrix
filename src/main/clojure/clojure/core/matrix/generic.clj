@@ -18,7 +18,7 @@
 
 (defrecord Specialisation
     [add mul div sub abs scalar? supports-inequality?
-     zero one = < > >= <= sqrt])
+     zero one = < > >= <= sqrt name])
 ;; generic versions of the clojure.core.matrix api
 
 (defn mul

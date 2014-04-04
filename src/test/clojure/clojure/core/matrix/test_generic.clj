@@ -1,6 +1,7 @@
 (ns clojure.core.matrix.test-generic
   (:use clojure.test)
   (:use [clojure.core.matrix.generators])
+  (:use [clojure.core.matrix.impl.generic-wrapper])
   (:require [clojure.core.matrix :as cm])
   (:require [clojure.core.matrix.operators :as op])
   (:require [clojure.core.matrix.protocols :as mp])
@@ -12,7 +13,8 @@
   (:require [clojure.test.check.clojure-test :as ct :refer (defspec)])
   (:import [clojure.core.matrix.generic]))
 
-(def real (map->Specialisation {:add +
+(def real (map->Specialisation {:name :real
+                                :add +
                                 :mul *
                                 :sub -
                                 :div clojure.core//
@@ -34,7 +36,8 @@
 
 
 (defn fp [precision]
-  (map->Specialisation {:add (comp (partial fp-round precision) +)
+  (map->Specialisation {:name (symbol (str "fp-" precision))
+                        :add (comp (partial fp-round precision) +)
                         :mul (comp (partial fp-round precision) *)
                         :sub (comp (partial fp-round precision) -)
                         :div (comp (partial fp-round precision) clojure.core//)
@@ -111,46 +114,63 @@
 (defspec test-gen-elem-wise-operations 100
   (prop/for-all [[a b] (gen-conforming-arrays
                         2 :implementations [:ndarray :persistent-vector])]
-                (is (cm/equals (cm/add a b) (add real a b)))
-                (is (cm/equals (cm/sub a b) (sub real a b)))
-                (is (cm/equals (cm/mul a b) (mul real a b)))
-                (is (cm/equals (cm/emul a b) (emul real a b)))
-                (is (cm/equals (cm/e* a b) (e* real a b)))
-                (when-not (some (partial == 0.0) (cm/eseq b))
-                  (is (cm/equals (cm/div a b) (div real a b))))
-                (is (cm/equals (cm/negate a) (negate real a)))))
+                (let [aw (wrap-generic a real) bw (wrap-generic b real)]
+                  (is (cm/equals (cm/add a b) (add real a b)))
+                  (is (cm/equals (cm/add a b) (cm/add aw bw)))
+                  (is (cm/equals (cm/sub a b) (sub real a b)))
+                  (is (cm/equals (cm/sub a b) (cm/sub aw bw)))
+                  (is (cm/equals (cm/mul a b) (mul real a b)))
+                  (is (cm/equals (cm/mul a b) (cm/mul aw bw)))
+                  (is (cm/equals (cm/emul a b) (emul real a b)))
+                  (is (cm/equals (cm/emul a b) (cm/emul aw bw)))
+                  (is (cm/equals (cm/e* a b) (e* real a b)))
+                  (is (cm/equals (cm/e* a b) (cm/e* aw bw)))
+                  (when-not (some (partial == 0.0) (cm/eseq b))
+                    (is (cm/equals (cm/div a b) (div real a b)))
+                    (is (cm/equals (cm/div a b) (cm/div aw bw))))
+                  (is (cm/equals (cm/negate a) (negate real a)))
+                  (is (cm/equals (cm/negate a) (cm/negate aw))))))
 
 (defspec test-mutable-operations 100
   (prop/for-all [[a b] (gen-conforming-arrays
                         2 :implementations [:ndarray])]
-                (let [a2 (cm/clone a) b2 (cm/clone b)]
-                  (cm/add! a b) (add! real a2 b2)
-                  (is (cm/equals a a2))
-                  (cm/mul! a b) (mul! real a2 b2)
-                  (is (cm/equals a a2))
-                  (cm/sub! a b) (sub! real a2 b2)
-                  (is (cm/equals a a2))
+                (let [a2 (cm/clone a) b2 (cm/clone b)
+                      aw2 (wrap-generic (cm/clone a2) real)
+                      bw2 (wrap-generic (cm/clone b2) real)]
+                  (cm/add! a b) (add! real a2 b2) (cm/add! aw2 bw2)
+                  (is (and (cm/equals a a2) (cm/equals a aw2)))
+                  (cm/mul! a b) (mul! real a2 b2) (cm/mul! aw2 bw2)
+                  (is (and (cm/equals a a2) (cm/equals a aw2)))
+                  (cm/sub! a b) (sub! real a2 b2) (cm/sub! aw2 bw2)
+                  (is (and (cm/equals a a2) (cm/equals a aw2)))
                   (when-not (some (partial == 0.0) (cm/eseq b))
-                    (cm/div! a b) (div! real a2 b2)
-                    (is (cm/equals a a2)))
+                    (cm/div! a b) (div! real a2 b2) (cm/div! aw2 bw2)
+                    (is (and (cm/equals a a2) (cm/equals a aw2))))
                   true)))
 
 
 (defspec test-gen-vector-operations 100
   (prop/for-all [a (gen-array :implementations [:ndarray :persistent-vector]
                               :max-dim 1 :min-dim 1)]
-                (is (cm/equals (cm/length a) (length real a)))
-                (is (cm/equals (cm/length-squared a) (length-squared
-                                                      real a)))
-                (is (cm/equals (cm/square a) (square real a)))
-                (when-not (== 0.0 (cm/length a))
-                  (is (cm/equals (cm/normalise a) (normalise real a))))
-                true))
+                (let [aw (wrap-generic a real)]
+                  (is (cm/equals (cm/length a) (length real a)))
+                  (is (cm/equals (cm/length a) (cm/length aw)))
+                  (is (cm/equals (cm/length-squared a) (length-squared
+                                                        real a)))
+                  (is (cm/equals (cm/length-squared a) (cm/length-squared aw)))
+                  (is (cm/equals (cm/square a) (square real a)))
+                  (is (cm/equals (cm/square a) (cm/square aw)))
+                  (when-not (== 0.0 (cm/length a))
+                    (is (cm/equals (cm/normalise a) (normalise real a)))
+                    (is (cm/equals (cm/normalise a) (cm/normalise aw))))
+                  true)))
 
 (defspec test-gen-mmul 20
   (prop/for-all [[a b] (gen/such-that
                         (fn [[l r]] (= (last (cm/shape l))
                                        (first (cm/shape r))))
                         (gen/tuple (gen-matrix :implementations [:ndarray :persistent-vector]) (gen-matrix :implementations [:ndarray :persistent-vector])))]
-                (is (cm/equals (cm/mmul a b) (mmul real a b)))))
+                (let [aw (wrap-generic a real) bw (wrap-generic b real)]
+                  (is (cm/equals (cm/mmul a b) (mmul real a b)))
+                  (is (cm/equals (cm/mmul a b) (cm/mmul aw bw))))))
 
