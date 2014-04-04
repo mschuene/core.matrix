@@ -1,4 +1,4 @@
-(ns clojure.core.matrix.gen
+(ns clojure.core.matrix.stag.gen
   (:refer-clojure)
   (:require [clojure.template :as tt]))
 ;;;

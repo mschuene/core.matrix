@@ -1,7 +1,7 @@
-(ns clojure.core.matrix.pv-generic
+(ns clojure.core.matrix.stag.pv-generic
+  (:use clojure.core.matrix.stag.gen)
   (:require [clojure.core.matrix.protocols :as mp])
   (:use clojure.core.matrix.utils)
-  (:use clojure.core.matrix.gen)
   (:require [clojure.core.matrix.impl.wrappers :as wrap])
   (:require [clojure.core.matrix.implementations :as imp])
   (:require [clojure.core.matrix.impl.mathsops :as mops])

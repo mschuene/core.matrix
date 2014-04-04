@@ -1,4 +1,4 @@
-(ns clojure.core.matrix.pv-common
+(ns clojure.core.matrix.stag.pv-common
   (:require [clojure.core.matrix.protocols :as mp])
   (:use clojure.core.matrix.utils)
   (:require [clojure.core.matrix.impl.wrappers :as wrap])
