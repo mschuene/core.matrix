@@ -5,7 +5,7 @@
   (:require [clojure.core.matrix.operators :as op])
   (:require [clojure.core.matrix.impl.wrappers :as wrap])
   (:require [clojure.core.matrix.compliance-tester])
-  (:require clojure.core.matrix.impl.persistent-vector)
+  (:require clojure.core.matrix.impl.pv-reals)
   (:refer-clojure :exclude [vector?]))
 
 ;; Tests for the implementation of core.matrix on Clojure persistent vectors
