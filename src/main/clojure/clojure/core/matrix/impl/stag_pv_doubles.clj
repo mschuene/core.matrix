@@ -46,11 +46,20 @@
 ;; => all above defined functions can
 ;;    be resolved
 (emit-with-subs [add# sub# mul# div# scalar?# one# zero# =# ># >=# <# <=# sqrt#       array-wrap-type-hint#  array-wrap-type#]
-                [   +    -    *    /  number?  1.0   0.0   == >  >=  <  <=  Math/sqrt clojure.lang.IPersistentVector IPersistentVector]
+                [   +    -    *    /  number?  1.0   0   == >  >=  <  <=  Math/sqrt clojure.lang.IPersistentVector IPersistentVector]
 ;                [   +    -    *    /  number?  1.0   0   == >  >=  <  <=  Math/sqrt Wrapper Wrapper]
                 @wpvg/lib)
 
 (count @wpvg/lib)
+
+;; (count @wpvg/dtl)
+;; (macroexpand-1 '(emit-with-subs [add# sub# mul# div# scalar?# one# zero# =# ># >=# <# <=# sqrt#       array-wrap-type-hint#  array-wrap-type#]
+;;                 [   +    -    *    /  number?  1.0   0.0   == >  >=  <  <=  Math/sqrt clojure.lang.IPersistentVector IPersistentVector]
+;;                 @wpvg/dtl))
+;; (emit-with-subs [add# sub# mul# div# scalar?# one# zero# =# ># >=# <# <=# sqrt#       array-wrap-type-hint#  array-wrap-type#]
+;;                 [   +    -    *    /  number?  1.0   0.0   == >  >=  <  <=  Math/sqrt clojure.lang.IPersistentVector IPersistentVector]
+;;                 @wpvg/dtl)
+
 
 ;; =====================================
 ;; Register implementation

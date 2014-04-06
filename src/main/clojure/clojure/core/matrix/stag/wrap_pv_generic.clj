@@ -6,9 +6,8 @@
   (:require [clojure.core.matrix.impl.wrappers :as wrap])
   (:require [clojure.core.matrix.implementations :as imp])
   (:require [clojure.core.matrix.impl.mathsops :as mops])
-  (:require [clojure.core.matrix.multimethods :as mm])
-  (:require [clojure.core.matrix.stag.wrap-pv-generic :as wpg])
-  (:import clojure.lang.IPersistentVector))
+  (:require [clojure.core.matrix.multimethods :as mm]))
+;  (:import clojure.lang.IPersistentVector))
 
 
 (set! *warn-on-reflection* true)
@@ -16,6 +15,7 @@
 
 ;; create a lib
 (def lib (template-lib))
+(def dtl (template-lib)) ; for debug
 
 ;; (def form-silly '(defn xxx [x] (add# x 3)))
 ;; (macroexpand '(emit-forms [add#] [+] (defn xxx [x] (add# x 3))))
@@ -73,44 +73,47 @@
                    (apply mapv f m1 m2 more)
                    (apply mapv (partial mapmatrix f) m1 m2 more)))))
 
-(add-template lib
-              (defn mapv-identity-check
-                "Maps a function over a persistent vector, only modifying the vector if the function
-                returns a different value"
-                ([f ^clojure.lang.IPersistentVector v]
-                 (let [n (.count v)]
-                   (loop [i 0 v v]
-                     (if (< i n)
-                       (let [x (.nth v i)
-                             y (f x)]
-                         (recur (inc i) (if (identical? x y) v (assoc v i y))))
-                       v))))))
-
+;; original form
 ;; (add-template lib
-;;               (eval
-;;                 (let [tv (vary-meta (gensym) :tag array-wrap-type-hint#)])
-;;                 `(defn ~'mapv-identity-check
-;;                    "Maps a function over a persistent vector, only modifying the vector if the function
-;;                    returns a different value"
-;;                    ([f ~tv]
-;;                     (let [n# (.count ~tv)]
-;;                       (loop [i 0 v ~tv]
-;;                         (if (< i n#)
-;;                           (let [x (.nth v i)
-;;                                 y (f x)]
-;;                             (recur (inc i) (if (identical? x y) v (assoc v i y))))
-;;                           v)))))))
+;;               (defn mapv-identity-check
+;;                 "Maps a function over a persistent vector, only modifying the vector if the function
+;;                 returns a different value"
+;;                 ([f ^clojure.lang.IPersistentVector v]
+;;                  (let [n (.count v)]
+;;                    (loop [i 0 v v]
+;;                      (if (< i n)
+;;                        (let [x (.nth v i)
+;;                              y (f x)]
+;;                          (recur (inc i) (if (identical? x y) v (assoc v i y))))
+;;                        v))))))
+
+(add-template lib
+              (eval
+                (let [tv (vary-meta (gensym) assoc :tag (quote array-wrap-type-hint#))]
+                `(defn ~'mapv-identity-check
+                   "Maps a function over a persistent vector, only modifying the vector if the function
+                   returns a different value"
+                   ([~'f ~tv]
+                    (let [n# (~'.count ~tv)]
+                      ;(println "YYY")
+                      (loop [~'i 0 ~'v ~tv]
+                        (if (< ~'i n#)
+                            ~'(let [x (.nth v i)
+                                  y (f x)]
+                              (recur (inc i) (if (identical? x y) v (assoc v i y))))
+                            ~'v))))))))
 
 
 (add-template lib
               (defn check-vector-shape
                 ([v shape]
+                 ;(println "ZZZ")
                  (and
-                   (instance? IPersistentVector v)
+                   (instance? array-wrap-type# v)
                    (== (count v) (first shape))
                    (if-let [ns (next shape)]
                      (every? #(check-vector-shape % ns) v)
-                     (every? #(not (instance? IPersistentVector %)) v))))))
+                     (every? #(not (instance? array-wrap-type# %)) v))))))
 
 (add-template lib (defn is-nested-persistent-vectors?
                     "Test if array is already in nested persistent vector array format."
@@ -118,7 +121,7 @@
                      (cond
                        (number? x) true
                        (mp/is-scalar? x) true
-                       (not (instance? clojure.lang.IPersistentVector x)) false
+                       (not (instance? array-wrap-type# x)) false
                        :else (and
                                (every? is-nested-persistent-vectors? x)
                                (check-vector-shape x (mp/get-shape x)))))))
@@ -142,14 +145,17 @@
                     :default x))))
 
 (add-template lib
-              (defn vector-dimensionality [m]
-                "Calculates the dimensionality (== nesting depth) of nested persistent vectors"
-                (cond
-                  (clojure.core/vector? m)
-                  (if (> (count m) 0)
-                    (+ 1 (vector-dimensionality (.nth ^IPersistentVector m 0)))
-                    1)
-                  :else (mp/dimensionality m))))
+              (eval
+                (let [thm (vary-meta (gensym) assoc :tag (quote array-wrap-type-hint#))]
+                  `(defn ~'vector-dimensionality [~thm]
+                     "Calculates the dimensionality (== nesting depth) of nested persistent vectors"
+                     ;(println "QQQ")
+                     (cond
+                       (clojure.core/vector? ~thm)
+                       (if (> (count ~thm) 0)
+                         (+ 1 (~'vector-dimensionality (.nth ~thm 0)))
+                         1)
+                       :else (mp/dimensionality ~thm))))))
 
 ;; =======================================================================
 ;; Implementation for nested Clojure persistent vectors used as matrices

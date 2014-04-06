@@ -16,9 +16,8 @@
 ;; quick example
 (m/mmul v u)
 
-(m/pm (m/mmul [[1 2] [3 4]] [1 2]))
+(time (dotimes [_ 1000000] (m/mmul [[1 2] [3 4]] [1 2])))
+(time (dotimes [_ 1000000] (m/mmul [[1 2] [3 4]] [1 2])))
+(time (dotimes [_ 1000000] (m/mmul [[1 2] [3 4]] [1 2])))
 (time (dotimes [_ 1000000] (m/mmul [[1 2] [3 4]] [1 2])))
 
-(println (m/current-implementation))
-
-(println "XXX")
