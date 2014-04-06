@@ -5,7 +5,7 @@
   (:require [clojure.core.matrix.operators :as op])
   (:require [clojure.core.matrix.impl.wrappers :as wrap])
   (:require [clojure.core.matrix.compliance-tester])
-  (:require clojure.core.matrix.impl.wrap-pv-doubles)
+  (:require clojure.core.matrix.impl.stag-pv-doubles)
   (:refer-clojure :exclude [vector?]))
 
 (def v (m/matrix [1 2 3]))

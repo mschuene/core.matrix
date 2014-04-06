@@ -200,7 +200,7 @@
   (let [vm (mp/convert-to-nested-vectors m)]
     (is (or (clojure.core/vector? vm) (== 0 (mp/dimensionality vm))))
     ;(is (clojure.core.matrix.impl.persistent-vector/is-nested-persistent-vectors? vm))
-    (is (clojure.core.matrix.impl.wrap-pv-doubles/is-nested-persistent-vectors? vm))
+    (is (clojure.core.matrix.impl.stag-pv-doubles/is-nested-persistent-vectors? vm))
     (is (e= m vm))))
 
 (defn test-pack [m]

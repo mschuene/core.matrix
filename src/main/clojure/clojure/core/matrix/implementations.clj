@@ -16,7 +16,7 @@
    :ndarray-double 'clojure.core.matrix.impl.ndarray
    :ndarray-float 'clojure.core.matrix.impl.ndarray
    :ndarray-long 'clojure.core.matrix.impl.ndarray
-   :persistent-vector 'clojure.core.matrix.impl.wrap-pv-doubles
+   :persistent-vector 'clojure.core.matrix.impl.stag-pv-doubles
    :persistent-map 'clojure.core.matrix.impl.sparse-map
    :sequence 'clojure.core.matrix.impl.sequence
    :double-array 'clojure.core.matrix.impl.double-array
