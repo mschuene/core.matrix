@@ -1,6 +1,6 @@
 (ns clojure.core.matrix
   (:use [clojure.core.matrix.utils])
-  (:require [clojure.core.matrix.impl default double-array object-array persistent-vector wrappers])
+  (:require [clojure.core.matrix.impl default double-array object-array wrap-pv-doubles wrappers])
   (:require [clojure.core.matrix.impl sequence]) ;; TODO: figure out if we want this?
   (:require [clojure.core.matrix.multimethods :as mm])
   (:require [clojure.core.matrix.protocols :as mp])
@@ -55,7 +55,7 @@
       (mp/construct-matrix (implementation-check) data)
       (mp/coerce-param [] data)))
   ([implementation data]
-    (or 
+    (or
       (mp/construct-matrix (implementation-check implementation) data)
       (mp/coerce-param [] data))))
 
@@ -77,7 +77,7 @@
       (mp/construct-matrix (implementation-check) data)
       (mp/coerce-param [] data)))
   ([implementation data]
-    (or 
+    (or
       (mp/construct-matrix (implementation-check implementation) data)
       (mp/coerce-param [] data))))
 
@@ -169,7 +169,7 @@
   "Constructs a 2D identity matrix with the given number of rows.
 
    Identity matrices constructed with this function may not be fully mutable because they may be
-   implemented with a specialised identity matrix type. Use (mutable (identity-matrix ...)) if you 
+   implemented with a specialised identity matrix type. Use (mutable (identity-matrix ...)) if you
    need to guarantee a mutable matrix."
   ([dims]
     (mp/identity-matrix (implementation-check) dims))
@@ -192,7 +192,7 @@
    from another core.matrix implementation that supports either the same element type or a broader type."
   ([data]
     (or (mp/mutable-matrix data)
-        (clojure.core.matrix.impl.default/construct-mutable-matrix data))) 
+        (clojure.core.matrix.impl.default/construct-mutable-matrix data)))
   ([data type]
     (or (mp/mutable-matrix data)
         (clojure.core.matrix.impl.default/construct-mutable-matrix data))
@@ -206,7 +206,7 @@
    from another core.matrix implementation that supports either the same element type or a broader type."
   ([data]
     (or (mp/immutable-matrix data)
-        (to-nested-vectors data))) 
+        (to-nested-vectors data)))
   ([data type]
     (or (mp/immutable-matrix data)
         (to-nested-vectors data))))
@@ -275,7 +275,7 @@
    Coerces an array to a dense format if possible. Dense arrays are expected to
    allocate contiguous storage space for all elements.
 
-   'dense' should not be used with very large arrays, and may throw an OutOfMemoryError 
+   'dense' should not be used with very large arrays, and may throw an OutOfMemoryError
     if the dense array is too large to fit in available memory.
 
    Returns the array unchanged if such coercion is not possible, or if the array is already dense."
@@ -349,7 +349,7 @@
     (mp/clone m)))
 
 (defn to-nested-vectors
-  "Converts an array to an idiomatic, immutable nested Clojure vector format. The bottom level of the 
+  "Converts an array to an idiomatic, immutable nested Clojure vector format. The bottom level of the
    nested vectors will contain the element values.
 
    The depth of nesting will be equal to the dimensionality of the array."
@@ -411,7 +411,7 @@
 
 (defn sparse?
   "Returns true if an array is sparse, i.e. the implementation supports storage of the entire
-   array in less memory than would normally be implied by the number of elements. 
+   array in less memory than would normally be implied by the number of elements.
 
    Sparse matrices may have memory requirements that scale with the number of non-zero elements
    rather than the total number of elements, for example."
@@ -481,9 +481,9 @@
 
    The result will be a vector containing only integer index values, with a count
    equal to the dimensionality of the array.
-   
+
    Returns nil the if object is not an array (i.e. is a scalar value)"
-  {:inline (fn 
+  {:inline (fn
              ([m] `(if-let [~'sh (mp/get-shape ~m)]
                      (vec ~'sh)
                      nil)))}
@@ -497,7 +497,7 @@
   ([m]
     (mp/zero-count m)))
 
-(defn density 
+(defn density
   "Returns the density of the matrix, defined as the proportion on non-zero elements"
   ([m]
     (let [zeros (double (mp/zero-count m))
@@ -527,7 +527,7 @@
   ([m n & more]
     (loop [m m n n more (seq more)]
       (if (or (identical? m n) (mp/same-shape? m n))
-        (if more 
+        (if more
           (recur n (first more) (next more))
           true)
         false))))
@@ -541,7 +541,7 @@
 ;; Conversions
 
 (defn to-double-array
-   "Returns a Java double[] array containing the values of a numerical array m in row-major order. Will 
+   "Returns a Java double[] array containing the values of a numerical array m in row-major order. Will
     throw an error if any of the array elements cannot be converted to doubles.
 
     If want-copy? is true, will guarantee a new double array (defensive copy).
@@ -575,14 +575,14 @@
   "Packs array data in the most efficient format as defined by the implementation. May return the
    same array if no additional packing is required."
   ([a]
-    (mp/pack a))) 
+    (mp/pack a)))
 
 ;; =======================================
 ;; matrix access
 
 (defn mget
   "Gets a scalar value from an array at the specified position. Supports any number of dimensions."
-  {:inline (fn 
+  {:inline (fn
              ([m] `(mp/get-0d ~m))
              ([m x] `(mp/get-1d ~m ~x))
              ([m x y] `(mp/get-2d ~m ~x ~y)))
@@ -610,12 +610,12 @@
 
 (defn mset!
   "Sets a scalar value in an array at the specified position. Supports any number of dimensions.
-   
+
    Will throw an exception if the matrix is not mutable at the specified position. Note that it
    is possible for some arrays to be mutable in places and immutable in others (e.g. sparse arrays)
-   
+
    Returns the modified matrix (it is guaranteed to return the same instance)"
-  {:inline (fn 
+  {:inline (fn
              ([m v] `(mp/set-0d! ~m ~v))
              ([m x v] `(mp/set-1d! ~m ~x ~v))
              ([m x y v] `(mp/set-2d! ~m ~x ~y ~v)))
@@ -719,7 +719,7 @@
 
    If the array has more than 2 dimensions, will return the rows from all slices in order."
   ([m]
-    (case (long (mp/dimensionality m)) 
+    (case (long (mp/dimensionality m))
         0 (error "Can't get rows of a 0-dimensional object")
         1 (error "Can't get rows of a 1-dimensional object") ;; TODO: consider scalar or length 1 vector results?
         2 (slices m)
@@ -730,7 +730,7 @@
 
    If the array has more than 2 dimensions, will return the columns from all slices in order."
   ([m]
-    (case (long (mp/dimensionality m)) 
+    (case (long (mp/dimensionality m))
         0 (error "Can't get columns of a 0-dimensional object")
         1 (error "Can't get columns of a 1-dimensional object") ;; TODO: consider scalar or length 1 vector results?
         2 (slices m 1)
@@ -856,7 +856,7 @@
 (defn equals
   "Returns true if two arrays are numerically equal.
 
-   Will return false for arrays of different shapes. 
+   Will return false for arrays of different shapes.
 
    May either return false or throw an error if the arrays are not numerical.
 
@@ -864,7 +864,7 @@
    with the given maximum tolerance (default is 0.0, i.e. exact numerical equivalence)"
   ([a b]
     (mp/matrix-equals a b))
-  ([a b epsilon] 
+  ([a b epsilon]
     (mp/matrix-equals-epsilon a b epsilon)))
 
 ;; ======================================
@@ -894,8 +894,8 @@
 (defn mmul
   "Performs matrix multiplication on matrices or vectors.  Equivalent to
   inner-product when applied to vectors.  Will treat a 1D vector roughly as a
-  1xN matrix (row vector) when it's the first argument, or as an Nx1 matrix 
-  (column vector) when it's the second argument--except that the dimensionality 
+  1xN matrix (row vector) when it's the first argument, or as an Nx1 matrix
+  (column vector) when it's the second argument--except that the dimensionality
   of the result will be different from what it would be with matrix arguments."
   ([] 1.0)
   ([a] a)
@@ -1091,7 +1091,7 @@
 
    If either argument is not a vector, computes a higher dimensional inner product."
   ([a b]
-    (or 
+    (or
       (mp/vector-dot a b)
       (mp/inner-product a b))))
 
@@ -1187,22 +1187,22 @@
   ([m exponent & more]
     (reduce (fn [m x] (mp/element-pow m x)) (mp/element-pow m exponent) more)))
 
-(defn pow! 
+(defn pow!
   "Mutable exponent function, see 'pow'"
   ([m a]
     ;; TODO: implement via a protocol + default implementation
-    (mp/assign! m (pow m a)))) 
+    (mp/assign! m (pow m a))))
 
 ;; create all unary maths operators
 (eval
   `(do ~@(map (fn [[name func]]
            `(defn ~name
-              ~(str "Computes the " name " function on all elements of an array, using double precision values. Returns a new array.") 
+              ~(str "Computes the " name " function on all elements of an array, using double precision values. Returns a new array.")
               ([~'m]
                 (~(symbol "clojure.core.matrix.protocols" (str name)) ~'m)))) mops/maths-ops)
      ~@(map (fn [[name func]]
            `(defn ~(symbol (str name "!"))
-              ~(str "Computes the " name " function on all elements of an array, using double precision values. Mutates the array in-place.") 
+              ~(str "Computes the " name " function on all elements of an array, using double precision values. Mutates the array in-place.")
               ([~'m]
                 (~(symbol "clojure.core.matrix.protocols" (str name "!")) ~'m)
                 ~'m))) mops/maths-ops))
@@ -1223,7 +1223,7 @@
   (mp/multiply-row m i factor))
 
 (defn add-row
-  "Add a row j (optionally multiplied by a scalar factor) to a row i 
+  "Add a row j (optionally multiplied by a scalar factor) to a row i
    and replace row i with the result"
   ([m i j]
     (mp/add-row m i j 1.0))
@@ -1329,10 +1329,10 @@
   ([f m a & more]
     (mp/element-map m f a more)))
 
-;(defn slice-map 
+;(defn slice-map
 ;  "Maps a function over all all slices of an array"
 ;  ([f m]
-;    (mp/slice-map m f))) 
+;    (mp/slice-map m f)))
 
 (defn esum
   "Calculates the sum of all the elements in a numerical array."
@@ -1420,7 +1420,7 @@
   ([impl]
     (if-let [im (imp/get-canonical-object impl)]
       im
-      (cond 
+      (cond
         (scalar? impl) (imp/get-canonical-object clojure.core.matrix/*matrix-implementation*)
         :else (error "No clojure.core.matrix implementation available - " (str impl))))))
 

@@ -199,7 +199,8 @@
   ;; (is (identical? m (coerce m m))) ;; TODO: figure out if we should enforce this?
   (let [vm (mp/convert-to-nested-vectors m)]
     (is (or (clojure.core/vector? vm) (== 0 (mp/dimensionality vm))))
-    (is (clojure.core.matrix.impl.persistent-vector/is-nested-persistent-vectors? vm))
+    ;(is (clojure.core.matrix.impl.persistent-vector/is-nested-persistent-vectors? vm))
+    (is (clojure.core.matrix.impl.wrap-pv-doubles/is-nested-persistent-vectors? vm))
     (is (e= m vm))))
 
 (defn test-pack [m]
@@ -332,7 +333,7 @@
 ;  (testing "Invalid vectors"
 ;    (is (error? (matrix m [1 [2 3]])))
 ;    (is (error? (matrix m [[2 3] 1]))))
-;  
+;
 )
 
 (defn test-dimensionality [im]

@@ -1,13 +1,5 @@
 (ns clojure.core.matrix.stag.pv-generic
-  (:use clojure.core.matrix.stag.gen)
-  (:require [clojure.core.matrix.protocols :as mp])
-  (:use clojure.core.matrix.utils)
-  (:require [clojure.core.matrix.impl.wrappers :as wrap])
-  (:require [clojure.core.matrix.implementations :as imp])
-  (:require [clojure.core.matrix.impl.mathsops :as mops])
-  (:require [clojure.core.matrix.multimethods :as mm])
-  (:import clojure.lang.IPersistentVector))
-
+  (:use clojure.core.matrix.stag.stag))
 
 ;; create a lib
 (def lib (template-lib))
