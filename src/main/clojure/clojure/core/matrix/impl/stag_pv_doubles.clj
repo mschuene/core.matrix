@@ -45,9 +45,23 @@
 ;; will be evaluated in this namespace
 ;; => all above defined functions can
 ;;    be resolved
-(emit-with-subs [add# sub# mul# div# scalar?# one# zero# =# ># >=# <# <=# sqrt#       array-wrap-type-hint#  array-wrap-type#]
-                [   +    -    *    /  number?  1.0   0   == >  >=  <  <=  Math/sqrt clojure.lang.IPersistentVector IPersistentVector]
-;                [   +    -    *    /  number?  1.0   0   == >  >=  <  <=  Math/sqrt Wrapper Wrapper]
+;; TODO: make a convenience substitution-map->substitution-vectors macro/fn
+(emit-with-subs [add# sub# mul# div#
+                 scalar?# one# zero#
+                 =# ># >=# <# <=# sqrt#
+                 array-wrap-type-hint#
+                 array-wrap-type#
+                 container-factory#
+                 sub-container#
+                 impl-key#]
+                [+ - * /
+                 number? 1.0 0
+                 == > >= < <=  Math/sqrt
+                 clojure.lang.IPersistentVector
+                 IPersistentVector
+                 seq
+                 subvec
+                 :persistent-vector]
                 @wpvg/lib)
 
 (count @wpvg/lib)

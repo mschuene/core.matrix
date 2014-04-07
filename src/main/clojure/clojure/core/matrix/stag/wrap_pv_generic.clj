@@ -15,7 +15,7 @@
 
 ;; create a lib
 (def lib (template-lib))
-(def dtl (template-lib)) ; for debug
+(def dtl (template-lib)) ; debug template lib
 
 ;; (def form-silly '(defn xxx [x] (add# x 3)))
 ;; (macroexpand '(emit-forms [add#] [+] (defn xxx [x] (add# x 3))))
@@ -163,15 +163,14 @@
               (extend-protocol mp/PImplementation
                 array-wrap-type#
                 ;(implementation-key [m] (keyword array-wrap-type#))
-                (implementation-key [m] :persistent-vector)
+                (implementation-key [m] impl-key#)
                 (meta-info [m]
-                  {:doc "Implementation for nested Clojure persistent vectors
-                        used as matrices"})
-                (new-vector [m length] (vec (repeat length zero#)))
-                (new-matrix [m rows columns] (vec (repeat rows (mp/new-vector m columns))))
+                  {:doc "Instantiated from IPersistentVector-supported implementations."})
+                (new-vector [m length] (container-factory# (repeat length zero#)))
+                (new-matrix [m rows columns] (container-factory# (repeat rows (mp/new-vector m columns))))
                 (new-matrix-nd [m dims]
                   (if-let [dims (seq dims)]
-                    (vec (repeat (first dims) (mp/new-matrix-nd m (next dims))))
+                    (container-factory# (repeat (first dims) (mp/new-matrix-nd m (next dims))))
                     zero#))
                 (construct-matrix [m data]
                   (persistent-vector-coerce data))
@@ -192,7 +191,7 @@
                       (error "Incompatible shapes, cannot broadcast " (vec mshape) " to " (vec target-shape))
                       :else
                       (reduce
-                        (fn [m dup] (vec (repeat dup m)))
+                        (fn [m dup] (container-factory# (repeat dup m)))
                         m
                         (reverse (drop-last dims target-shape))))))))
 
@@ -281,7 +280,7 @@
                         adims (mp/dimensionality a)]
                     (cond
                       (== dims adims)
-                      (vec (concat (mp/get-major-slice-seq m) (mp/get-major-slice-seq a)))
+                      (container-factory# (concat (mp/get-major-slice-seq m) (mp/get-major-slice-seq a)))
                       (== dims (inc adims))
                       (conj m a)
                       :else
@@ -296,14 +295,16 @@
                           sh (if (> c 0) (mod places c) 0)]
                       (if (== sh 0)
                         m
-                        (vec (concat (subvec m sh c) (subvec m 0 sh)))))
+                        ; would be cleaner to call sub-container# but can stay
+                        ; like this as wrapper supports subvec
+                        (container-factory# (concat (subvec m sh c) (subvec m 0 sh)))))
                     (mapv (fn [s] (mp/rotate s (dec dim) places)) m)))))
 
 (add-template lib
               (extend-protocol mp/PSubVector
                 array-wrap-type#
                 (subvector [m start length]
-                  (subvec m start (+ start length)))))
+                  (sub-container# m start (+ start length)))))
 
 (add-template lib
               (extend-protocol mp/PValidateShape
@@ -422,14 +423,14 @@
                     (cond
                       (== adims 0) (mp/scale m a)
                       (and (== mdims 1) (== adims 2))
-                      (vec (for [i (range (mp/dimension-count a 1))]
+                      (container-factory# (for [i (range (mp/dimension-count a 1))]
                              (let [r (mp/get-column a i)]
                                (mp/vector-dot m r))))
                       (and (== mdims 2) (== adims 1))
                       (mapv #(mp/vector-dot % a) m)
                       (and (== mdims 2) (== adims 2))
                       (mapv (fn [r]
-                              (vec (for [j (range (mp/dimension-count a 1))]
+                              (container-factory# (for [j (range (mp/dimension-count a 1))]
                                      (mp/vector-dot r (mp/get-column a j))))) m)
                       :else
                       (mm/mul m a))))))
@@ -488,7 +489,7 @@
                 (get-shape [m]
                   (let [c (.length m)]
                     (cons c (if (> c 0)
-                              (mp/get-shape (m 0))
+                              (mp/get-shape (.nth m 0))
                               nil))))
                 (dimension-count [m x]
                   (if (== x 0)

@@ -1,4 +1,4 @@
-(ns clojure.core.matrix.impl.wrap-pv-doubles
+(ns clojure.core.matrix.impl.wrap2-pv-doubles
   (:refer-clojure)
   (:use clojure.core.matrix.stag.stag)
   (:require [clojure.core.matrix.protocols :as mp])
@@ -37,19 +37,19 @@
 ;;                        (~mpmname s#)))))
 ;;               mops/maths-ops)))
 
-(deftype Wrapper [^clojure.lang.IPersistentVector w]
+(deftype Wrapper2 [^clojure.lang.IPersistentVector w]
   clojure.lang.Seqable
 ;    (seq [this] (seq ^clojure.lang.IPersistentVector (.w this)))
     ;(seq [this] (map #(.nth this %) (range (.length this))))
     (seq [this] (map #(if (vector? %)
-                        (Wrapper. %)
+                        (Wrapper2. %)
                         %) (seq ^clojure.lang.IPersistentVector (.w this))))
   clojure.lang.IPersistentCollection
     ;(count [this] (count (.w this)))
-    (cons [this x] (Wrapper. (cons (.w this) x)))
-    (empty [this] (Wrapper. (empty (.w this))))
-    (equiv [this x] (if (instance? Wrapper x)
-                               (.equiv ^clojure.lang.IPersistentVector (.w this) (.w ^Wrapper x))
+    (cons [this x] (Wrapper2. (cons (.w this) x)))
+    (empty [this] (Wrapper2. (empty (.w this))))
+    (equiv [this x] (if (instance? Wrapper2 x)
+                               (.equiv ^clojure.lang.IPersistentVector (.w this) (.w ^Wrapper2 x))
                                (.equiv ^clojure.lang.IPersistentVector (.w this) x)))
   clojure.lang.Reversible
     (rseq [this] (rseq ^clojure.langi.IPersistentVector (.w this)))
@@ -58,8 +58,8 @@
     (valAt [this x y] (.valAt ^clojure.lang.IPersistentVector (.w this) x y))
   clojure.lang.IPersistentVector
     (length [this] (.length ^clojure.lang.IPersistentVector (.w this)))
-    ;(cons [this x] (Wrapper. (cons (.w this) x)))
-    (assocN [this x y] (Wrapper. (.assocN ^clojure.lang.IPersistentVector (.w this) x y)))
+    ;(cons [this x] (Wrapper2. (cons (.w this) x)))
+    (assocN [this x y] (Wrapper2. (.assocN ^clojure.lang.IPersistentVector (.w this) x y)))
   clojure.lang.Counted
     (count [this] (count ^clojure.lang.IPersistentVector (.w this)))
   clojure.lang.Associative
@@ -69,35 +69,35 @@
   clojure.lang.Indexed
     (nth [this x] (let [n (nth (.w this) x)]
                     (if (vector? n)
-                      (Wrapper. n)
+                      (Wrapper2. n)
                       n)))
     (nth [this x y] (let [n (nth (.w this) x y)]
                       (if (vector? n)
-                        (Wrapper. n)
+                        (Wrapper2. n)
                         n)))
   clojure.lang.IPersistentStack
-    (pop [this] (Wrapper. (pop (.w this))))
+    (pop [this] (Wrapper2. (pop (.w this))))
     (peek [this] (peek (.w this))))
 
 (defn pv-wrap
   [w]
-  (Wrapper. (vec w)))
+  (Wrapper2. (vec w)))
 
 (defn sub-pv-wrap
-  ([^Wrapper pvw st] (Wrapper. (subvec ^clojure.lang.IPersistentVector (.w pvw) st)))
-  ([^Wrapper pvw st en] (Wrapper. (subvec ^clojure.lang.IPersistentVector (.w pvw) st en))))
+  ([^Wrapper2 pvw st] (Wrapper2. (subvec ^clojure.lang.IPersistentVector (.w pvw) st)))
+  ([^Wrapper2 pvw st en] (Wrapper2. (subvec ^clojure.lang.IPersistentVector (.w pvw) st en))))
 
-(Wrapper. [1 2 3])
-(seq (Wrapper. [1 2 3]))
-(time (dotimes [_ 1000000] (= (Wrapper. [1]) [0])))
+(Wrapper2. [1 2 3])
+(seq (Wrapper2. [1 2 3]))
+(time (dotimes [_ 1000000] (= (Wrapper2. [1]) [0])))
 (time (dotimes [_ 1000000] (= [1] [0])))
-(count (Wrapper. [1 2 3]))
+(count (Wrapper2. [1 2 3]))
 (.length [1 2 3])
-(.length (Wrapper. [1 2 3]))
+(.length (Wrapper2. [1 2 3]))
 
-(def X (Wrapper. [1 2 3]))
+(def X (Wrapper2. [1 2 3]))
 ;(subvec X 1 2)
-(def Y (Wrapper. [:a :b]))
+(def Y (Wrapper2. [:a :b]))
 (concat X Y)
 (concat [1 2 3] [:a :b])
 (vector? X)
@@ -111,14 +111,14 @@
                  container-factory#
                  sub-container#
                  impl-key#]
-                [+ - * /
-                 number? 1.0 0
+                [* - * /
+                 number? 1.0 0.0
                  == > >= < <=  Math/sqrt
-                 Wrapper
-                 Wrapper
+                 Wrapper2
+                 Wrapper2
                  pv-wrap
                  sub-pv-wrap
-                 :wrapper]
+                 :wrapper2]
                 @wpvg/lib)
 
 
@@ -129,4 +129,4 @@
 ;; Register implementation
 
 ;(imp/register-implementation [1.0])
-(imp/register-implementation (Wrapper. [1.0]))
+(imp/register-implementation (Wrapper2. [1.0]))
